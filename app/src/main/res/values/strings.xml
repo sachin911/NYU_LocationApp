@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">NYU_MyLocation</string>
+    <string name="lbl_you_are_at">CURRENT LOCATION</string>
+    <string name="btn_get_location">GET LOCATION</string>
+    <string name="btn_start_location_updates">START LOCATION UPDATES</string>
+    <string name="btn_stop_location_updates">STOP LOCATION UPDATES</string>
+    <string name="action_settings">SETTING</string>
+
+</resources>
