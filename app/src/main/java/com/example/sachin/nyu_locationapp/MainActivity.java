@@ -2,7 +2,6 @@ package com.example.sachin.nyu_locationapp;
 
 import android.app.Activity;
 import android.location.Location;
-import android.location.LocationListener;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,12 +14,12 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationListener;
 
 
 public class MainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
-
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -28,7 +27,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     //time interval between location updates
     private static int UPDATE_INTERVAL = 10000; // 10 sec
     private static int FATEST_INTERVAL = 5000; // 5 sec
-    private static int DISPLACEMENT = 10; // 10 meters
+    private static int DISPLACEMENT = 10; // 0 meters
     private Location mLastLocation;
     // Google client to interact with Google API
     private GoogleApiClient mGoogleApiClient;
@@ -53,6 +52,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
             // Building the GoogleApi client
             buildGoogleApiClient();
+
+            createLocationRequest();
         }
 
         // Show location button click listener
@@ -63,6 +64,67 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 displayLocation();
             }
         });
+
+        // Periodic location updates toggle
+        btnStartLocationUpdates.setOnClickListener(
+                new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                togglePeriodicLocationUpdates();
+            }
+        });
+
+    }
+
+    private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        mLocationRequest.setFastestInterval(FATEST_INTERVAL);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
+    }
+
+    /*
+    This method turns periodic location updates on and off
+     */
+    private void togglePeriodicLocationUpdates() {
+        if (!mRequestingLocationUpdates) {
+            // Changing the button text
+            btnStartLocationUpdates
+                    .setText(getString(R.string.btn_stop_location_updates));
+
+            mRequestingLocationUpdates = true;
+
+            // Starting the location updates
+            startLocationUpdates();
+
+            Log.d(TAG, "Periodic location updates started!");
+
+        } else {
+            // Changing the button text
+            btnStartLocationUpdates
+                    .setText(getString(R.string.btn_start_location_updates));
+
+            mRequestingLocationUpdates = false;
+
+            // Stopping the location updates
+            stopLocationUpdates();
+
+            Log.d(TAG, "Periodic location updates stopped!");
+        }
+    }
+
+    private void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient,this);
+    }
+
+
+    private void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+
     }
 
     /**
@@ -130,7 +192,25 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         super.onResume();
 
         checkPlayServices();
+
+        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {  //location updates must also start on resume
+            startLocationUpdates();
+        }
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+//    @Override
+////    protected void onPause() {
+////        super.onPause();
+////        stopLocationUpdates();
+////    }
 
     /**
      * Google api callback methods
@@ -146,6 +226,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         // Once connected with google api, get the location
         displayLocation();
+        if (mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
     }
 
     @Override
@@ -155,25 +238,31 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     @Override
     public void onLocationChanged(Location location) {
+        // Assign the new location
+        mLastLocation = location;
+
+        Toast.makeText(getApplicationContext(), "You have changed your Location.",
+                Toast.LENGTH_SHORT).show();
+
+        // Displaying the new location on UI
+        displayLocation();
 
     }
 
-    /*
-    This method is used to update the location when the user moves. This is not yet implemented.
-     */
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
 
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
+//    @Override
+//    public void onStatusChanged(String provider, int status, Bundle extras) {
+//
+//    }
+//
+//    @Override
+//    public void onProviderEnabled(String provider) {
+//
+//    }
+//
+//    @Override
+//    public void onProviderDisabled(String provider) {
+//
+//    }
 }
 
