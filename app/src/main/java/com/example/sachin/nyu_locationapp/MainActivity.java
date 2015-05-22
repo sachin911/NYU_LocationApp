@@ -198,6 +198,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     }
 
     @Override
+//onstart
     protected void onStart() {
         super.onStart();
         if (mGoogleApiClient != null) {
